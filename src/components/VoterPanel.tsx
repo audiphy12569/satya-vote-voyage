@@ -15,6 +15,21 @@ const VoterPanel = () => {
   const [loading, setLoading] = useState(true);
   const [votingHistory, setVotingHistory] = useState<any[]>([]);
   const [remainingTime, setRemainingTime] = useState<string>('');
+  const [isVoting, setIsVoting] = useState(false);
+
+  const checkElectionEnd = (endTime: number) => {
+    const now = Date.now();
+    if (now >= endTime) {
+      setElectionActive(false);
+      setRemainingTime('Election ended');
+      toast({
+        title: "Election Ended",
+        description: "The voting period has concluded.",
+      });
+      return true;
+    }
+    return false;
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -23,21 +38,35 @@ const VoterPanel = () => {
           getCandidates(),
           getElectionStatus()
         ]);
-        console.log('Fetched candidates:', candidatesList); // Debug log
+        console.log('Fetched candidates:', candidatesList);
         setCandidates(candidatesList);
-        setElectionActive(status.isActive);
         
-        // Calculate remaining time if election is active
-        if (status.isActive) {
-          const endTime = Number(status.endTime) * 1000; // Convert to milliseconds
-          const now = Date.now();
-          const remaining = endTime - now;
-          
-          if (remaining > 0) {
+        // Check if election has ended
+        const endTime = Number(status.endTime) * 1000;
+        const hasEnded = checkElectionEnd(endTime);
+        
+        if (!hasEnded && status.isActive) {
+          setElectionActive(true);
+          // Calculate and update remaining time
+          const updateRemainingTime = () => {
+            const now = Date.now();
+            const remaining = endTime - now;
+            
+            if (remaining <= 0) {
+              setElectionActive(false);
+              setRemainingTime('Election ended');
+              clearInterval(timeInterval);
+              return;
+            }
+            
             const minutes = Math.floor(remaining / (1000 * 60));
             const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
             setRemainingTime(`${minutes}m ${seconds}s`);
-          }
+          };
+          
+          updateRemainingTime();
+          const timeInterval = setInterval(updateRemainingTime, 1000);
+          return () => clearInterval(timeInterval);
         }
         
         setLoading(false);
@@ -59,7 +88,16 @@ const VoterPanel = () => {
   }, [toast]);
 
   const handleVote = async (candidateId: number) => {
+    if (isVoting) {
+      toast({
+        title: "Please wait",
+        description: "Your previous vote is still being processed",
+      });
+      return;
+    }
+
     try {
+      setIsVoting(true);
       await castVote(candidateId);
       toast({
         title: "Success",
@@ -69,13 +107,15 @@ const VoterPanel = () => {
       // Refresh candidates list after voting
       const updatedCandidates = await getCandidates();
       setCandidates(updatedCandidates);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error casting vote:', error);
       toast({
         title: "Error",
-        description: "Failed to cast vote. Please try again.",
+        description: error?.message || "Failed to cast vote. Please try again.",
         variant: "destructive"
       });
+    } finally {
+      setIsVoting(false);
     }
   };
 
@@ -128,7 +168,7 @@ const VoterPanel = () => {
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {candidates.map((candidate, index) => (
+              {candidates.map((candidate) => (
                 <Card key={candidate.id.toString()} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
                     <CardTitle className="text-lg">{candidate.name}</CardTitle>
@@ -142,9 +182,10 @@ const VoterPanel = () => {
                       </span>
                       <Button 
                         onClick={() => handleVote(Number(candidate.id))}
+                        disabled={isVoting}
                         className="w-32"
                       >
-                        Vote
+                        {isVoting ? 'Voting...' : 'Vote'}
                       </Button>
                     </div>
                   </CardContent>

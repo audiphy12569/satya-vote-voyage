@@ -29,37 +29,22 @@ export const getVoters = async (): Promise<string[]> => {
     const walletClient = await getWalletClient();
     const account = await walletClient.getAddresses();
     
-    // First try to get the voter count
-    const voterCount = await publicClient.readContract({
+    // Get all past VoterApproved events
+    const logs = await publicClient.getLogs({
       address: CONTRACT_ADDRESS as `0x${string}`,
-      abi,
-      functionName: 'getVoterCount',
-      chain: sepolia,
-      account: account[0]
-    }) as bigint;
+      event: {
+        type: 'event',
+        name: 'VoterApproved',
+        inputs: [{ type: 'address', name: 'voter', indexed: false }],
+      },
+      fromBlock: 0n,
+      toBlock: 'latest'
+    });
 
-    console.log('Voter count:', voterCount);
-
-    // Then get each voter individually
-    const voters: string[] = [];
-    for (let i = 0; i < Number(voterCount); i++) {
-      try {
-        const voter = await publicClient.readContract({
-          address: CONTRACT_ADDRESS as `0x${string}`,
-          abi,
-          functionName: 'voters',
-          args: [BigInt(i)],
-          chain: sepolia,
-          account: account[0]
-        }) as string;
-        
-        if (voter && voter !== '0x0000000000000000000000000000000000000000') {
-          voters.push(voter);
-        }
-      } catch (error) {
-        console.error(`Error fetching voter at index ${i}:`, error);
-      }
-    }
+    // Extract unique voter addresses from the events
+    const voters = [...new Set(logs.map(log => 
+      log.args.voter as string
+    ))];
     
     console.log('Voters fetched successfully:', voters);
     return voters;

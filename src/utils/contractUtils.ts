@@ -122,7 +122,6 @@ export const approveVoter = async (voterAddress: string): Promise<void> => {
 
 // Cast vote function
 export const castVote = async (candidateId: number): Promise<void> => {
-  const contract = getContractInstance();
   try {
     console.log('Casting vote for candidate:', candidateId);
     const [account] = await walletClient.requestAddresses();
@@ -146,7 +145,6 @@ export const castVote = async (candidateId: number): Promise<void> => {
 
 // Start election function
 export const startElection = async (durationInMinutes: number): Promise<void> => {
-  const contract = getContractInstance();
   try {
     console.log('Starting election with duration:', durationInMinutes);
     const [account] = await walletClient.requestAddresses();

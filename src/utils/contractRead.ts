@@ -26,8 +26,6 @@ export const getAdminAddress = async (): Promise<string | undefined> => {
 export const getVoters = async (): Promise<string[]> => {
   try {
     console.log('Fetching approved voters from contract...');
-    const walletClient = await getWalletClient();
-    const account = await walletClient.getAddresses();
     
     // Get all past VoterApproved events
     const logs = await publicClient.getLogs({
@@ -45,9 +43,26 @@ export const getVoters = async (): Promise<string[]> => {
     const voters = [...new Set(logs.map(log => 
       log.args.voter as string
     ))];
+
+    // Verify each voter is still approved by calling approvedVoters mapping
+    const approvedVoters = await Promise.all(
+      voters.map(async (voter) => {
+        const isApproved = await publicClient.readContract({
+          address: CONTRACT_ADDRESS as `0x${string}`,
+          abi,
+          functionName: 'approvedVoters',
+          args: [voter],
+          chain: sepolia
+        }) as boolean;
+        return isApproved ? voter : null;
+      })
+    );
+
+    // Filter out null values and return only currently approved voters
+    const currentVoters = approvedVoters.filter((voter): voter is string => voter !== null);
     
-    console.log('Voters fetched successfully:', voters);
-    return voters;
+    console.log('Voters fetched successfully:', currentVoters);
+    return currentVoters;
   } catch (error) {
     console.error('Error fetching voters:', error);
     return [];
@@ -75,7 +90,7 @@ export const getCandidates = async (): Promise<Candidate[]> => {
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi,
         functionName: 'getCandidate',
-        args: [BigInt(i)],
+        args: [BigInt(i + 1)], // Adding 1 because candidate IDs start from 1
         chain: sepolia,
         account: account[0]
       }) as CandidateResponse;

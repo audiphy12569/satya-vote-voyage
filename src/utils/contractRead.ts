@@ -29,16 +29,40 @@ export const getVoters = async (): Promise<string[]> => {
     const walletClient = await getWalletClient();
     const account = await walletClient.getAddresses();
     
-    const data = await publicClient.readContract({
+    // First try to get the voter count
+    const voterCount = await publicClient.readContract({
       address: CONTRACT_ADDRESS as `0x${string}`,
       abi,
-      functionName: 'getApprovedVoters',
+      functionName: 'getVoterCount',
       chain: sepolia,
       account: account[0]
-    }) as string[];
+    }) as bigint;
+
+    console.log('Voter count:', voterCount);
+
+    // Then get each voter individually
+    const voters: string[] = [];
+    for (let i = 0; i < Number(voterCount); i++) {
+      try {
+        const voter = await publicClient.readContract({
+          address: CONTRACT_ADDRESS as `0x${string}`,
+          abi,
+          functionName: 'voters',
+          args: [BigInt(i)],
+          chain: sepolia,
+          account: account[0]
+        }) as string;
+        
+        if (voter && voter !== '0x0000000000000000000000000000000000000000') {
+          voters.push(voter);
+        }
+      } catch (error) {
+        console.error(`Error fetching voter at index ${i}:`, error);
+      }
+    }
     
-    console.log('Voters fetched successfully:', data);
-    return data || [];
+    console.log('Voters fetched successfully:', voters);
+    return voters;
   } catch (error) {
     console.error('Error fetching voters:', error);
     return [];

@@ -2,6 +2,7 @@ import { publicClient } from './contractUtils';
 import { CONTRACT_ADDRESS } from '@/config/web3Config';
 import { abi } from './contractAbi';
 import type { ElectionStatus, Candidate, CandidateResponse, ElectionStatusResponse } from './types';
+import { sepolia } from 'viem/chains';
 
 export const getAdminAddress = async (): Promise<string | undefined> => {
   try {
@@ -9,7 +10,8 @@ export const getAdminAddress = async (): Promise<string | undefined> => {
     const data = await publicClient.readContract({
       address: CONTRACT_ADDRESS as `0x${string}`,
       abi,
-      functionName: 'admin'
+      functionName: 'admin',
+      chain: sepolia
     }) as string;
     
     console.log('Admin address fetched:', data);
@@ -26,13 +28,14 @@ export const getVoters = async (): Promise<string[]> => {
     const data = await publicClient.readContract({
       address: CONTRACT_ADDRESS as `0x${string}`,
       abi,
-      functionName: 'getApprovedVoters'
+      functionName: 'getApprovedVoters',
+      chain: sepolia
     }) as string[];
     
-    return data;
+    return data || [];
   } catch (error) {
     console.error('Error fetching voters:', error);
-    throw error;
+    return [];
   }
 };
 

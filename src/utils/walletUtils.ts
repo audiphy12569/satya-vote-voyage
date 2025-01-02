@@ -1,33 +1,41 @@
 import { createWalletClient, custom } from 'viem';
 import { sepolia } from 'viem/chains';
 
-export const requestWalletAccess = async () => {
+declare global {
+  interface Window {
+    ethereum?: any;
+  }
+}
+
+export const requestWalletAccess = async (): Promise<string> => {
   if (!window.ethereum) {
-    throw new Error('No Ethereum provider found. Please install MetaMask or another wallet.');
+    throw new Error('No Ethereum provider found. Please install MetaMask.');
   }
 
   try {
     const accounts = await window.ethereum.request({ 
       method: 'eth_requestAccounts' 
     });
-
-    if (!accounts || accounts.length === 0) {
-      throw new Error('No accounts found. Please ensure your wallet is connected.');
+    
+    if (!accounts[0]) {
+      throw new Error('No account found');
     }
 
     return accounts[0];
   } catch (error) {
     console.error('Error requesting wallet access:', error);
-    throw new Error('Failed to connect to wallet. Please try again.');
+    throw error;
   }
 };
 
 export const getWalletClient = async () => {
   if (!window.ethereum) {
-    throw new Error('No Ethereum provider found. Please install MetaMask or another wallet.');
+    throw new Error('No Ethereum provider found. Please install MetaMask.');
   }
 
-  const [account] = await window.ethereum.request({ method: 'eth_requestAccounts' });
+  const [account] = await window.ethereum.request({ 
+    method: 'eth_requestAccounts' 
+  });
 
   return createWalletClient({
     account,

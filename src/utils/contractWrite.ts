@@ -1,6 +1,7 @@
 import { CONTRACT_ADDRESS } from '@/config/web3Config';
 import { abi } from './contractAbi';
 import { requestWalletAccess, getWalletClient } from './walletUtils';
+import { sepolia } from 'viem/chains';
 
 export const approveVoter = async (voterAddress: string): Promise<void> => {
   try {
@@ -14,7 +15,8 @@ export const approveVoter = async (voterAddress: string): Promise<void> => {
       abi,
       functionName: 'approveVoter',
       args: [voterAddress as `0x${string}`],
-      account: account as `0x${string}`
+      account: account as `0x${string}`,
+      chain: sepolia
     });
 
     console.log('Transaction hash:', hash);
@@ -34,7 +36,8 @@ export const castVote = async (candidateId: number): Promise<void> => {
       abi,
       functionName: 'vote',
       args: [BigInt(candidateId)],
-      account: account as `0x${string}`
+      account: account as `0x${string}`,
+      chain: sepolia
     });
   } catch (error) {
     console.error('Error casting vote:', error);
@@ -52,7 +55,8 @@ export const startElection = async (durationInMinutes: number): Promise<void> =>
       abi,
       functionName: 'startElection',
       args: [BigInt(durationInMinutes)],
-      account: account as `0x${string}`
+      account: account as `0x${string}`,
+      chain: sepolia
     });
   } catch (error) {
     console.error('Error starting election:', error);

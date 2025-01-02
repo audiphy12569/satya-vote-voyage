@@ -7,6 +7,7 @@ export interface ElectionStatus {
 }
 
 export interface Candidate {
+  id: bigint;
   name: string;
   party: string;
   tagline: string;

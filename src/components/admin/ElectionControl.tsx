@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { startElection, getElectionStatus } from '@/utils/contractUtils';
+import { startElection, getElectionStatus, getCandidates } from '@/utils/contractUtils';
+import ElectionResults from './ElectionResults';
 
 interface ElectionControlProps {
   electionActive: boolean;
@@ -16,6 +17,8 @@ const ElectionControl = ({ electionActive, candidateCount = 0 }: ElectionControl
   const [duration, setDuration] = useState('60');
   const [hasEnded, setHasEnded] = useState(false);
   const [endTime, setEndTime] = useState<bigint>(BigInt(0));
+  const [totalVotes, setTotalVotes] = useState<bigint>(BigInt(0));
+  const [candidates, setCandidates] = useState<any[]>([]);
 
   useEffect(() => {
     const checkElectionStatus = async () => {
@@ -23,7 +26,15 @@ const ElectionControl = ({ electionActive, candidateCount = 0 }: ElectionControl
         const status = await getElectionStatus();
         const currentTime = BigInt(Math.floor(Date.now() / 1000));
         setEndTime(status.endTime);
-        setHasEnded(status.endTime > BigInt(0) && currentTime >= status.endTime);
+        setTotalVotes(status.totalVotes);
+        const isEnded = status.endTime > BigInt(0) && currentTime >= status.endTime;
+        
+        if (isEnded && !hasEnded) {
+          const candidatesList = await getCandidates();
+          setCandidates(candidatesList);
+        }
+        
+        setHasEnded(isEnded);
       } catch (error) {
         console.error('Error checking election status:', error);
       }
@@ -31,7 +42,7 @@ const ElectionControl = ({ electionActive, candidateCount = 0 }: ElectionControl
 
     const interval = setInterval(checkElectionStatus, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [hasEnded]);
 
   const handleStartElection = async () => {
     if (candidateCount < 2) {
@@ -59,6 +70,8 @@ const ElectionControl = ({ electionActive, candidateCount = 0 }: ElectionControl
         title: "Success",
         description: `Election started successfully. Duration: ${durationMinutes} minutes`,
       });
+      setHasEnded(false);
+      setCandidates([]);
     } catch (error) {
       console.error('Error starting election:', error);
       toast({
@@ -87,72 +100,81 @@ const ElectionControl = ({ electionActive, candidateCount = 0 }: ElectionControl
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Election Management</CardTitle>
-        <CardDescription>Control the election process</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-secondary rounded-lg">
-            <div>
-              <h3 className="font-semibold">Election Status</h3>
-              <p className="text-sm text-muted-foreground">
-                {getElectionStatusText()}
-                {getRemainingTime() && (
-                  <span className="ml-2 text-xs">({getRemainingTime()})</span>
-                )}
-              </p>
-            </div>
-            {!electionActive && !hasEnded && (
-              <div className="flex items-center gap-4">
-                <div className="w-32">
-                  <Label htmlFor="duration">Duration (minutes)</Label>
-                  <Input
-                    id="duration"
-                    type="number"
-                    min="1"
-                    value={duration}
-                    onChange={(e) => setDuration(e.target.value)}
-                    placeholder="60"
-                  />
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Election Management</CardTitle>
+          <CardDescription>Control the election process</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-secondary rounded-lg">
+              <div>
+                <h3 className="font-semibold">Election Status</h3>
+                <p className="text-sm text-muted-foreground">
+                  {getElectionStatusText()}
+                  {getRemainingTime() && (
+                    <span className="ml-2 text-xs">({getRemainingTime()})</span>
+                  )}
+                </p>
+              </div>
+              {!electionActive && !hasEnded && (
+                <div className="flex items-center gap-4">
+                  <div className="w-32">
+                    <Label htmlFor="duration">Duration (minutes)</Label>
+                    <Input
+                      id="duration"
+                      type="number"
+                      min="1"
+                      value={duration}
+                      onChange={(e) => setDuration(e.target.value)}
+                      placeholder="60"
+                    />
+                  </div>
+                  <Button
+                    onClick={handleStartElection}
+                    disabled={candidateCount < 2}
+                    className="mt-6"
+                  >
+                    Start Election
+                  </Button>
                 </div>
+              )}
+              {electionActive && !hasEnded && (
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    toast({
+                      title: "Coming soon",
+                      description: "This feature is under development",
+                    });
+                  }}
+                >
+                  End Election
+                </Button>
+              )}
+              {hasEnded && (
                 <Button
                   onClick={handleStartElection}
                   disabled={candidateCount < 2}
-                  className="mt-6"
                 >
-                  Start Election
+                  Start New Election
                 </Button>
-              </div>
-            )}
-            {electionActive && !hasEnded && (
-              <Button
-                variant="destructive"
-                onClick={() => {
-                  toast({
-                    title: "Coming soon",
-                    description: "This feature is under development",
-                  });
-                }}
-              >
-                End Election
-              </Button>
-            )}
-            {hasEnded && (
-              <Button variant="secondary" disabled>
-                Election Ended
-              </Button>
+              )}
+            </div>
+            {!electionActive && !hasEnded && candidateCount < 2 && (
+              <p className="text-sm text-muted-foreground">
+                Note: At least 2 candidates are required to start the election. Current count: {candidateCount}
+              </p>
             )}
           </div>
-          {!electionActive && !hasEnded && candidateCount < 2 && (
-            <p className="text-sm text-muted-foreground">
-              Note: At least 2 candidates are required to start the election. Current count: {candidateCount}
-            </p>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      {hasEnded && candidates.length > 0 && (
+        <ElectionResults candidates={candidates} totalVotes={totalVotes} />
+      )}
+    </div>
   );
 };
 

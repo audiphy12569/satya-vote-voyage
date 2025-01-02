@@ -23,6 +23,7 @@ const VoterPanel = () => {
           getCandidates(),
           getElectionStatus()
         ]);
+        console.log('Fetched candidates:', candidatesList); // Debug log
         setCandidates(candidatesList);
         setElectionActive(status.isActive);
         
@@ -116,7 +117,7 @@ const VoterPanel = () => {
         </CardContent>
       </Card>
 
-      {electionActive && (
+      {electionActive && candidates.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -128,7 +129,7 @@ const VoterPanel = () => {
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {candidates.map((candidate, index) => (
-                <Card key={index} className="hover:shadow-lg transition-shadow">
+                <Card key={candidate.id.toString()} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
                     <CardTitle className="text-lg">{candidate.name}</CardTitle>
                     <CardDescription>{candidate.party}</CardDescription>

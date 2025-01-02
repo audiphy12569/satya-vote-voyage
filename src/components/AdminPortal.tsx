@@ -84,7 +84,10 @@ const AdminPortal = () => {
         </TabsContent>
 
         <TabsContent value="election">
-          <ElectionControl electionActive={electionActive} />
+          <ElectionControl 
+            electionActive={electionActive} 
+            candidateCount={candidates.length}
+          />
         </TabsContent>
       </Tabs>
     </div>

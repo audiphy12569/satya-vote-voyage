@@ -26,6 +26,30 @@ export const approveVoter = async (voterAddress: string): Promise<void> => {
   }
 };
 
+export const addCandidate = async (
+  name: string,
+  party: string,
+  tagline: string,
+  logoIPFS: string
+): Promise<void> => {
+  try {
+    const account = await requestWalletAccess();
+    const walletClient = await getWalletClient();
+    
+    await walletClient.writeContract({
+      address: CONTRACT_ADDRESS as `0x${string}`,
+      abi,
+      functionName: 'addCandidate',
+      args: [name, party, tagline, logoIPFS],
+      account: account as `0x${string}`,
+      chain: sepolia
+    });
+  } catch (error) {
+    console.error('Error adding candidate:', error);
+    throw error;
+  }
+};
+
 export const castVote = async (candidateId: number): Promise<void> => {
   try {
     const account = await requestWalletAccess();

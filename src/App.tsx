@@ -7,6 +7,9 @@ import { WagmiConfig } from 'wagmi';
 import { Web3Modal } from '@web3modal/react';
 import { config, ethereumClient } from './config/web3Config';
 import Index from "./pages/Index";
+import AdminPortal from "./components/AdminPortal";
+import VoterPanel from "./components/VoterPanel";
+import VoterManagement from "./components/admin/VoterManagement";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +30,12 @@ const App = () => {
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />
+                {/* Admin Routes */}
+                <Route path="/admin" element={<AdminPortal />} />
+                <Route path="/add-voter" element={<VoterManagement voters={[]} setVoters={() => {}} />} />
+                {/* Voter Routes */}
+                <Route path="/vote" element={<VoterPanel />} />
+                <Route path="/results" element={<VoterPanel />} />
               </Routes>
             </BrowserRouter>
           </TooltipProvider>

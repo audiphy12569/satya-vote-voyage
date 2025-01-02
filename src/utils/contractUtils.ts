@@ -1,4 +1,4 @@
-import { createPublicClient, http, createWalletClient, custom, getContract } from 'viem';
+import { createPublicClient, http, getContract } from 'viem';
 import { sepolia } from 'viem/chains';
 import { abi } from './contractAbi';
 
@@ -52,7 +52,12 @@ export const getCandidates = async () => {
   const contract = getContractInstance();
   try {
     const candidates = await contract.read.getAllCandidates();
-    return candidates;
+    return candidates.map((candidate, index) => ({
+      id: index,
+      name: candidate[1],
+      party: candidate[2],
+      tagline: candidate[3]
+    }));
   } catch (error) {
     console.error('Error fetching candidates:', error);
     return [];

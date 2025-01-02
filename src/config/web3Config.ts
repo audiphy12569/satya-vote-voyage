@@ -3,7 +3,6 @@ import { sepolia } from 'wagmi/chains';
 import { alchemyProvider } from 'wagmi/providers/alchemy';
 import { publicProvider } from 'wagmi/providers/public';
 import { EthereumClient, w3mConnectors, w3mProvider } from '@web3modal/ethereum';
-import { Web3Modal } from '@web3modal/react';
 
 // This will be replaced with your actual contract address after deployment
 export const CONTRACT_ADDRESS = '0x0000000000000000000000000000000000000000';

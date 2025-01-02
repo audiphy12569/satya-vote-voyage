@@ -29,12 +29,15 @@ export const getVoters = async (): Promise<string[]> => {
       address: CONTRACT_ADDRESS as `0x${string}`,
       abi,
       functionName: 'getApprovedVoters',
-      chain: sepolia
+      chain: sepolia,
+      account: publicClient.account
     }) as string[];
     
+    console.log('Voters fetched successfully:', data);
     return data || [];
   } catch (error) {
     console.error('Error fetching voters:', error);
+    // Return empty array instead of throwing to handle the error gracefully
     return [];
   }
 };
@@ -46,7 +49,8 @@ export const getCandidates = async (): Promise<Candidate[]> => {
       address: CONTRACT_ADDRESS as `0x${string}`,
       abi,
       functionName: 'getCandidateCount',
-      chain: sepolia
+      chain: sepolia,
+      account: publicClient.account
     }) as bigint;
     
     const candidates: Candidate[] = [];
@@ -57,7 +61,8 @@ export const getCandidates = async (): Promise<Candidate[]> => {
         abi,
         functionName: 'getCandidate',
         args: [BigInt(i)],
-        chain: sepolia
+        chain: sepolia,
+        account: publicClient.account
       }) as CandidateResponse;
       
       candidates.push({
@@ -84,7 +89,8 @@ export const getElectionStatus = async (): Promise<ElectionStatus> => {
       address: CONTRACT_ADDRESS as `0x${string}`,
       abi,
       functionName: 'getElectionStatus',
-      chain: sepolia
+      chain: sepolia,
+      account: publicClient.account
     }) as ElectionStatusResponse;
     
     return {

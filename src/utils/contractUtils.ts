@@ -2,6 +2,22 @@ import { createPublicClient, http, getContract } from 'viem';
 import { sepolia } from 'viem/chains';
 import { abi } from './contractAbi';
 
+// Define types for our contract responses
+interface ElectionStatus {
+  isActive: boolean;
+  startTime: bigint;
+  endTime: bigint;
+  totalVotes: bigint;
+}
+
+interface Candidate {
+  name: string;
+  party: string;
+  tagline: string;
+  logoIPFS: string;
+  voteCount: bigint;
+}
+
 // Fallback contract address for development
 const FALLBACK_CONTRACT_ADDRESS = "0x0000000000000000000000000000000000000000";
 
@@ -25,13 +41,13 @@ export const getContractInstance = () => {
 };
 
 // Fetch admin address from contract
-export const getAdminAddress = async () => {
+export const getAdminAddress = async (): Promise<string | null> => {
   const contract = getContractInstance();
   try {
     console.log('Fetching admin address from contract...');
     const admin = await contract.read.admin();
     console.log('Admin address fetched:', admin);
-    return admin;
+    return admin as string;
   } catch (error) {
     console.error('Error fetching admin address:', error);
     return null;
@@ -39,7 +55,7 @@ export const getAdminAddress = async () => {
 };
 
 // Get all approved voters
-export const getVoters = async () => {
+export const getVoters = async (): Promise<string[]> => {
   const contract = getContractInstance();
   try {
     console.log('Fetching approved voters from contract...');
@@ -53,22 +69,21 @@ export const getVoters = async () => {
 };
 
 // Fetch all candidates
-export const getCandidates = async () => {
+export const getCandidates = async (): Promise<Candidate[]> => {
   const contract = getContractInstance();
   try {
     console.log('Fetching candidates from contract...');
     const count = await contract.read.getCandidateCount();
-    const candidates = [];
+    const candidates: Candidate[] = [];
     
     for(let i = 0; i < Number(count); i++) {
       const candidate = await contract.read.getCandidate([BigInt(i)]);
       candidates.push({
-        id: i,
         name: candidate[0],
         party: candidate[1],
         tagline: candidate[2],
         logoIPFS: candidate[3],
-        voteCount: Number(candidate[4])
+        voteCount: candidate[4]
       });
     }
     
@@ -81,21 +96,31 @@ export const getCandidates = async () => {
 };
 
 // Fetch election status
-export const getElectionStatus = async () => {
+export const getElectionStatus = async (): Promise<ElectionStatus> => {
   const contract = getContractInstance();
   try {
     console.log('Fetching election status from contract...');
     const status = await contract.read.getElectionStatus();
     console.log('Election status fetched:', status);
-    return status.isActive;
+    return {
+      isActive: status[0],
+      startTime: status[1],
+      endTime: status[2],
+      totalVotes: status[3]
+    };
   } catch (error) {
     console.error('Error fetching election status:', error);
-    return false;
+    return {
+      isActive: false,
+      startTime: BigInt(0),
+      endTime: BigInt(0),
+      totalVotes: BigInt(0)
+    };
   }
 };
 
 // Add voter function
-export const addVoter = async (voterAddress: string) => {
+export const addVoter = async (voterAddress: string): Promise<unknown> => {
   const contract = getContractInstance();
   try {
     console.log('Adding voter:', voterAddress);
@@ -109,7 +134,7 @@ export const addVoter = async (voterAddress: string) => {
 };
 
 // Cast vote function
-export const castVote = async (candidateId: number) => {
+export const castVote = async (candidateId: number): Promise<unknown> => {
   const contract = getContractInstance();
   try {
     console.log('Casting vote for candidate:', candidateId);
@@ -123,7 +148,7 @@ export const castVote = async (candidateId: number) => {
 };
 
 // Start election function
-export const startElection = async (durationInMinutes: number) => {
+export const startElection = async (durationInMinutes: number): Promise<unknown> => {
   const contract = getContractInstance();
   try {
     console.log('Starting election with duration:', durationInMinutes);

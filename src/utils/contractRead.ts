@@ -6,7 +6,7 @@ import { sepolia } from 'viem/chains';
 import { getWalletClient } from './walletUtils';
 
 // Store the deployment block number to optimize log fetching
-const DEPLOYMENT_BLOCK = 4795000n; // Replace with your contract deployment block
+const RECENT_BLOCKS = 10000n; // Look back 10,000 blocks by default
 
 export const getAdminAddress = async (): Promise<string | undefined> => {
   try {
@@ -30,13 +30,13 @@ export const getVoters = async (): Promise<string[]> => {
   try {
     console.log('Fetching approved voters from contract...');
     
-    // First try to get the latest block for better performance
+    // Get the latest block and calculate fromBlock
     const latestBlock = await publicClient.getBlockNumber();
-    const fromBlock = latestBlock - 10000n > DEPLOYMENT_BLOCK ? latestBlock - 10000n : DEPLOYMENT_BLOCK;
+    const fromBlock = latestBlock - RECENT_BLOCKS;
     
-    console.log('Fetching logs from block:', fromBlock.toString());
+    console.log('Fetching logs from block:', fromBlock.toString(), 'to latest:', latestBlock.toString());
     
-    // Get VoterApproved events with pagination
+    // Get VoterApproved events
     const logs = await publicClient.getLogs({
       address: CONTRACT_ADDRESS as `0x${string}`,
       event: {
@@ -44,8 +44,8 @@ export const getVoters = async (): Promise<string[]> => {
         name: 'VoterApproved',
         inputs: [{ type: 'address', name: 'voter', indexed: false }],
       },
-      fromBlock: fromBlock,
-      toBlock: 'latest'
+      fromBlock,
+      toBlock: latestBlock
     });
 
     // Extract unique voter addresses from the events
@@ -55,7 +55,7 @@ export const getVoters = async (): Promise<string[]> => {
 
     console.log('Found voters from events:', voters);
 
-    // Verify each voter is still approved by calling approvedVoters mapping
+    // Verify each voter is still approved
     const approvedVoters = await Promise.all(
       voters.map(async (voter) => {
         try {
@@ -74,29 +74,12 @@ export const getVoters = async (): Promise<string[]> => {
       })
     );
 
-    // Filter out null values and return only currently approved voters
+    // Filter out null values
     const currentVoters = approvedVoters.filter((voter): voter is string => voter !== null);
-    
     console.log('Currently approved voters:', currentVoters);
     return currentVoters;
   } catch (error) {
     console.error('Error fetching voters:', error);
-    
-    // Fallback: try direct contract call if logs fail
-    try {
-      console.log('Attempting fallback method to fetch voters...');
-      const voter = await publicClient.readContract({
-        address: CONTRACT_ADDRESS as `0x${string}`,
-        abi,
-        functionName: 'approvedVoters',
-        args: [CONTRACT_ADDRESS],
-        chain: sepolia
-      });
-      console.log('Fallback method result:', voter);
-    } catch (fallbackError) {
-      console.error('Fallback method also failed:', fallbackError);
-    }
-    
     return [];
   }
 };
@@ -122,12 +105,13 @@ export const getCandidates = async (): Promise<Candidate[]> => {
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi,
         functionName: 'getCandidate',
-        args: [BigInt(i + 1)], // Adding 1 because candidate IDs start from 1
+        args: [BigInt(i + 1)],
         chain: sepolia,
         account: account[0]
       }) as CandidateResponse;
       
       candidates.push({
+        id: BigInt(i + 1),
         name: candidate[0],
         party: candidate[1],
         tagline: candidate[2],

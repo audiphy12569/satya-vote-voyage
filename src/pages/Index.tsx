@@ -14,7 +14,14 @@ const Index = () => {
     const checkAdminStatus = async () => {
       if (address) {
         const adminAddress = await getAdminAddress();
-        setIsAdmin(adminAddress?.toLowerCase() === address.toLowerCase());
+        console.log('Connected address:', address);
+        console.log('Admin address from contract:', adminAddress);
+        
+        // Convert both addresses to lowercase for comparison
+        const isAdminUser = adminAddress?.toLowerCase() === address.toLowerCase();
+        console.log('Is admin?', isAdminUser);
+        
+        setIsAdmin(isAdminUser);
       }
       setLoading(false);
     };

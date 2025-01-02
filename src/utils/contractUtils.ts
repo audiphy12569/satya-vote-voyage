@@ -16,6 +16,7 @@ export const publicClient = createPublicClient({
 
 // Create contract instance
 export const getContractInstance = () => {
+  console.log('Creating contract instance with address:', CONTRACT_ADDRESS);
   return getContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi,
@@ -27,7 +28,9 @@ export const getContractInstance = () => {
 export const getAdminAddress = async () => {
   const contract = getContractInstance();
   try {
+    console.log('Fetching admin address from contract...');
     const admin = await contract.read.owner();
+    console.log('Admin address fetched:', admin);
     return admin;
   } catch (error) {
     console.error('Error fetching admin address:', error);

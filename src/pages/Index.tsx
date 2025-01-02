@@ -1,21 +1,13 @@
 import { useEffect, useState } from 'react';
-import { useAccount, useDisconnect } from 'wagmi';
+import { useAccount } from 'wagmi';
 import { Web3Button } from '@web3modal/react';
 import AdminPortal from '@/components/AdminPortal';
 import VoterPanel from '@/components/VoterPanel';
+import Navbar from '@/components/Navbar';
 import { getAdminAddress } from '@/utils/contractUtils';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
 
 const Index = () => {
   const { address, isConnected } = useAccount();
-  const { disconnect } = useDisconnect();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -23,13 +15,7 @@ const Index = () => {
     const checkAdminStatus = async () => {
       if (address) {
         const adminAddress = await getAdminAddress();
-        console.log('Connected address:', address);
-        console.log('Admin address from contract:', adminAddress);
-        
-        // Convert both addresses to lowercase for comparison
         const isAdminUser = adminAddress?.toLowerCase() === address.toLowerCase();
-        console.log('Is admin?', isAdminUser);
-        
         setIsAdmin(isAdminUser);
       }
       setLoading(false);
@@ -58,28 +44,15 @@ const Index = () => {
     );
   }
 
-  const truncateAddress = (addr: string) => {
-    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
-  };
-
   return (
-    <div>
-      <div className="absolute top-4 right-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline">
-              {address && truncateAddress(address)}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => disconnect()}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Disconnect
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      {isAdmin ? <AdminPortal /> : <VoterPanel />}
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      <main className="container mx-auto py-6">
+        {isAdmin ? <AdminPortal /> : <VoterPanel />}
+      </main>
+      <footer className="bg-[#1e3a8a] text-white py-4 text-center mt-auto">
+        <p className="text-sm">© 2024 Satya Vote. Secure and Transparent Voting System</p>
+      </footer>
     </div>
   );
 };

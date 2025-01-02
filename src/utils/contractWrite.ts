@@ -50,6 +50,25 @@ export const addCandidate = async (
   }
 };
 
+export const removeCandidate = async (candidateId: number): Promise<void> => {
+  try {
+    const account = await requestWalletAccess();
+    const walletClient = await getWalletClient();
+    
+    await walletClient.writeContract({
+      address: CONTRACT_ADDRESS as `0x${string}`,
+      abi,
+      functionName: 'removeCandidate',
+      args: [BigInt(candidateId)],
+      account: account as `0x${string}`,
+      chain: sepolia
+    });
+  } catch (error) {
+    console.error('Error removing candidate:', error);
+    throw error;
+  }
+};
+
 export const castVote = async (candidateId: number): Promise<void> => {
   try {
     const account = await requestWalletAccess();

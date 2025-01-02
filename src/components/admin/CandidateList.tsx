@@ -3,9 +3,9 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlus, Award } from "lucide-react";
+import { UserPlus, Award, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { addCandidate } from '@/utils/contractWrite';
+import { addCandidate, removeCandidate } from '@/utils/contractWrite';
 
 interface CandidateListProps {
   candidates: any[];
@@ -47,6 +47,23 @@ const CandidateList = ({ candidates }: CandidateListProps) => {
       toast({
         title: "Error",
         description: "Failed to add candidate. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleRemoveCandidate = async (candidateId: number) => {
+    try {
+      await removeCandidate(candidateId);
+      toast({
+        title: "Success",
+        description: "Candidate removed successfully",
+      });
+    } catch (error) {
+      console.error('Error removing candidate:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove candidate. Please try again.",
         variant: "destructive"
       });
     }
@@ -123,7 +140,17 @@ const CandidateList = ({ candidates }: CandidateListProps) => {
             {candidates.map((candidate, index) => (
               <Card key={index} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
-                  <CardTitle className="text-lg">{candidate.name}</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg">{candidate.name}</CardTitle>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveCandidate(index)}
+                      className="h-8 w-8 text-destructive hover:text-destructive/90"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                   <CardDescription>{candidate.party}</CardDescription>
                 </CardHeader>
                 <CardContent>

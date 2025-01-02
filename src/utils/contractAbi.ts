@@ -49,8 +49,8 @@ const candidateFunctions = [
     "outputs": [
       { "internalType": "string", "name": "name", "type": "string" },
       { "internalType": "string", "name": "party", "type": "string" },
-      { "internalType": "string", "name": "_tagline", "type": "string" },
-      { "internalType": "string", "name": "_logoIPFS", "type": "string" },
+      { "internalType": "string", "name": "tagline", "type": "string" },
+      { "internalType": "string", "name": "logoIPFS", "type": "string" },
       { "internalType": "uint256", "name": "voteCount", "type": "uint256" }
     ],
     "stateMutability": "view",

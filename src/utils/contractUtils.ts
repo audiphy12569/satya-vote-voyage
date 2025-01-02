@@ -21,12 +21,15 @@ export const getContractInstance = () => {
 
 // Fetch admin address from contract
 export const getAdminAddress = async (): Promise<string | null> => {
-  const contract = getContractInstance();
   try {
     console.log('Fetching admin address from contract...');
-    const admin = await contract.read.admin();
-    console.log('Admin address fetched:', admin);
-    return admin as string;
+    const data = await publicClient.readContract({
+      address: CONTRACT_ADDRESS as `0x${string}`,
+      abi,
+      functionName: 'admin',
+    });
+    console.log('Admin address fetched:', data);
+    return data as string;
   } catch (error) {
     console.error('Error fetching admin address:', error);
     return null;
@@ -35,11 +38,14 @@ export const getAdminAddress = async (): Promise<string | null> => {
 
 // Get all approved voters
 export const getVoters = async (): Promise<string[]> => {
-  const contract = getContractInstance();
   try {
     console.log('Fetching approved voters from contract...');
-    const voters = await contract.read.getApprovedVoters();
-    return voters as string[];
+    const data = await publicClient.readContract({
+      address: CONTRACT_ADDRESS as `0x${string}`,
+      abi,
+      functionName: 'getApprovedVoters',
+    });
+    return data as string[];
   } catch (error) {
     console.error('Error fetching voters:', error);
     return [];
@@ -48,14 +54,24 @@ export const getVoters = async (): Promise<string[]> => {
 
 // Fetch all candidates
 export const getCandidates = async (): Promise<Candidate[]> => {
-  const contract = getContractInstance();
   try {
     console.log('Fetching candidates from contract...');
-    const count = await contract.read.getCandidateCount();
+    const count = await publicClient.readContract({
+      address: CONTRACT_ADDRESS as `0x${string}`,
+      abi,
+      functionName: 'getCandidateCount',
+    });
+    
     const candidates: Candidate[] = [];
     
     for(let i = 0; i < Number(count); i++) {
-      const candidate = await contract.read.getCandidate([BigInt(i)]);
+      const candidate = await publicClient.readContract({
+        address: CONTRACT_ADDRESS as `0x${string}`,
+        abi,
+        functionName: 'getCandidate',
+        args: [BigInt(i)],
+      }) as [string, string, string, string, bigint];
+      
       candidates.push({
         name: candidate[0],
         party: candidate[1],
@@ -75,10 +91,14 @@ export const getCandidates = async (): Promise<Candidate[]> => {
 
 // Fetch election status
 export const getElectionStatus = async (): Promise<ElectionStatus> => {
-  const contract = getContractInstance();
   try {
     console.log('Fetching election status from contract...');
-    const status = await contract.read.getElectionStatus();
+    const status = await publicClient.readContract({
+      address: CONTRACT_ADDRESS as `0x${string}`,
+      abi,
+      functionName: 'getElectionStatus',
+    }) as [boolean, bigint, bigint, bigint];
+    
     console.log('Election status fetched:', status);
     return {
       isActive: status[0],

@@ -6,14 +6,15 @@ export const approveVoter = async (voterAddress: string): Promise<void> => {
   try {
     console.log('Approving voter:', voterAddress);
     
-    await requestWalletAccess();
-    const walletClient = getWalletClient();
+    const account = await requestWalletAccess();
+    const walletClient = await getWalletClient();
     
     const hash = await walletClient.writeContract({
       address: CONTRACT_ADDRESS as `0x${string}`,
       abi,
       functionName: 'approveVoter',
-      args: [voterAddress as `0x${string}`]
+      args: [voterAddress as `0x${string}`],
+      account: account as `0x${string}`
     });
 
     console.log('Transaction hash:', hash);
@@ -25,14 +26,15 @@ export const approveVoter = async (voterAddress: string): Promise<void> => {
 
 export const castVote = async (candidateId: number): Promise<void> => {
   try {
-    await requestWalletAccess();
-    const walletClient = getWalletClient();
+    const account = await requestWalletAccess();
+    const walletClient = await getWalletClient();
     
     await walletClient.writeContract({
       address: CONTRACT_ADDRESS as `0x${string}`,
       abi,
       functionName: 'vote',
-      args: [BigInt(candidateId)]
+      args: [BigInt(candidateId)],
+      account: account as `0x${string}`
     });
   } catch (error) {
     console.error('Error casting vote:', error);
@@ -42,14 +44,15 @@ export const castVote = async (candidateId: number): Promise<void> => {
 
 export const startElection = async (durationInMinutes: number): Promise<void> => {
   try {
-    await requestWalletAccess();
-    const walletClient = getWalletClient();
+    const account = await requestWalletAccess();
+    const walletClient = await getWalletClient();
     
     await walletClient.writeContract({
       address: CONTRACT_ADDRESS as `0x${string}`,
       abi,
       functionName: 'startElection',
-      args: [BigInt(durationInMinutes)]
+      args: [BigInt(durationInMinutes)],
+      account: account as `0x${string}`
     });
   } catch (error) {
     console.error('Error starting election:', error);

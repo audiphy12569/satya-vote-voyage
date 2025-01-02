@@ -22,12 +22,15 @@ export const requestWalletAccess = async () => {
   }
 };
 
-export const getWalletClient = () => {
+export const getWalletClient = async () => {
   if (!window.ethereum) {
     throw new Error('No Ethereum provider found. Please install MetaMask or another wallet.');
   }
 
+  const [account] = await window.ethereum.request({ method: 'eth_requestAccounts' });
+
   return createWalletClient({
+    account,
     chain: sepolia,
     transport: custom(window.ethereum)
   });

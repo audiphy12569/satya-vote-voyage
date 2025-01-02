@@ -1,78 +1,28 @@
 export const abi = [
   {
-    "inputs": [],
-    "name": "owner",
-    "outputs": [
-      {
-        "internalType": "address",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getAllVoters",
-    "outputs": [
-      {
-        "internalType": "address[]",
-        "type": "address[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getAllCandidates",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "type": "uint256"
-          },
-          {
-            "internalType": "string",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "type": "string"
-          }
-        ],
-        "internalType": "struct VotingContract.Candidate[]",
-        "type": "tuple[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "electionStatus",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
-        "internalType": "address",
-        "type": "address"
+        "internalType": "string",
+        "name": "_name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_party",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_tagline",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_logoIPFS",
+        "type": "string"
       }
     ],
-    "name": "addVoter",
+    "name": "addCandidate",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -80,19 +30,34 @@ export const abi = [
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "_voter",
+        "type": "address"
       }
     ],
-    "name": "vote",
+    "name": "approveVoter",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "admin",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "_durationInMinutes",
         "type": "uint256"
       }
     ],
@@ -102,10 +67,96 @@ export const abi = [
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "endElection",
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_candidateId",
+        "type": "uint256"
+      }
+    ],
+    "name": "vote",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getElectionStatus",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "isActive",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "startTime",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "endTime",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalVotes",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getCandidateCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_id",
+        "type": "uint256"
+      }
+    ],
+    "name": "getCandidate",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "party",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "tagline",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "logoIPFS",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "voteCount",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   }
 ] as const;

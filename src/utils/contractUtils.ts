@@ -42,7 +42,9 @@ export const getAdminAddress = async () => {
 export const getVoters = async () => {
   const contract = getContractInstance();
   try {
+    console.log('Fetching voters from contract...');
     const voters = await contract.read.getAllVoters();
+    console.log('Voters fetched:', voters);
     return voters;
   } catch (error) {
     console.error('Error fetching voters:', error);
@@ -54,8 +56,10 @@ export const getVoters = async () => {
 export const getCandidates = async () => {
   const contract = getContractInstance();
   try {
+    console.log('Fetching candidates from contract...');
     const candidates = await contract.read.getAllCandidates();
-    return candidates.map((candidate, index) => ({
+    console.log('Candidates fetched:', candidates);
+    return candidates.map((candidate: any, index: number) => ({
       id: index,
       name: candidate[1],
       party: candidate[2],
@@ -71,10 +75,68 @@ export const getCandidates = async () => {
 export const getElectionStatus = async () => {
   const contract = getContractInstance();
   try {
+    console.log('Fetching election status from contract...');
     const status = await contract.read.electionStatus();
+    console.log('Election status fetched:', status);
     return status;
   } catch (error) {
     console.error('Error fetching election status:', error);
     return false;
+  }
+};
+
+// Add voter function
+export const addVoter = async (voterAddress: string) => {
+  const contract = getContractInstance();
+  try {
+    console.log('Adding voter:', voterAddress);
+    const tx = await contract.write.addVoter([voterAddress]);
+    console.log('Voter added successfully:', tx);
+    return tx;
+  } catch (error) {
+    console.error('Error adding voter:', error);
+    throw error;
+  }
+};
+
+// Cast vote function
+export const castVote = async (candidateId: number) => {
+  const contract = getContractInstance();
+  try {
+    console.log('Casting vote for candidate:', candidateId);
+    const tx = await contract.write.vote([candidateId]);
+    console.log('Vote cast successfully:', tx);
+    return tx;
+  } catch (error) {
+    console.error('Error casting vote:', error);
+    throw error;
+  }
+};
+
+// Start election function
+export const startElection = async (durationInMinutes: number) => {
+  const contract = getContractInstance();
+  try {
+    console.log('Starting election with duration:', durationInMinutes);
+    const tx = await contract.write.startElection([durationInMinutes]);
+    console.log('Election started successfully:', tx);
+    return tx;
+  } catch (error) {
+    console.error('Error starting election:', error);
+    throw error;
+  }
+};
+
+// End election function
+export const endElection = async () => {
+  const contract = getContractInstance();
+  try {
+    console.log('Ending election...');
+    const tx = await contract.write.endElection();
+    console.log('Election ended successfully:', tx);
+    return tx;
+  } catch (error) {
+    console.error('Error ending election:', error);
+    throw error;
   }
 };

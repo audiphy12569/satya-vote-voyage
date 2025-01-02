@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { getCandidates, getElectionStatus } from '@/utils/contractUtils';
 import { Vote, History, Timer } from "lucide-react";
+import { castVote } from '@/utils/contractWrite';
 
 const VoterPanel = () => {
   const { toast } = useToast();
@@ -13,6 +14,7 @@ const VoterPanel = () => {
   const [electionActive, setElectionActive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [votingHistory, setVotingHistory] = useState<any[]>([]);
+  const [remainingTime, setRemainingTime] = useState<string>('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -22,7 +24,21 @@ const VoterPanel = () => {
           getElectionStatus()
         ]);
         setCandidates(candidatesList);
-        setElectionActive(status);
+        setElectionActive(status.isActive);
+        
+        // Calculate remaining time if election is active
+        if (status.isActive) {
+          const endTime = Number(status.endTime) * 1000; // Convert to milliseconds
+          const now = Date.now();
+          const remaining = endTime - now;
+          
+          if (remaining > 0) {
+            const minutes = Math.floor(remaining / (1000 * 60));
+            const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+            setRemainingTime(`${minutes}m ${seconds}s`);
+          }
+        }
+        
         setLoading(false);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -36,19 +52,27 @@ const VoterPanel = () => {
     };
 
     fetchData();
+    const interval = setInterval(fetchData, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
   }, [toast]);
 
   const handleVote = async (candidateId: number) => {
     try {
-      // Add contract interaction here
+      await castVote(candidateId);
       toast({
         title: "Success",
         description: "Vote cast successfully",
       });
+      
+      // Refresh candidates list after voting
+      const updatedCandidates = await getCandidates();
+      setCandidates(updatedCandidates);
     } catch (error) {
+      console.error('Error casting vote:', error);
       toast({
         title: "Error",
-        description: "Failed to cast vote",
+        description: "Failed to cast vote. Please try again.",
         variant: "destructive"
       });
     }
@@ -79,7 +103,7 @@ const VoterPanel = () => {
           </CardTitle>
           <CardDescription>
             {electionActive 
-              ? "Election is currently active. Cast your vote below."
+              ? `Election is currently active. Time remaining: ${remainingTime}`
               : "No active election at the moment."}
           </CardDescription>
         </CardHeader>
@@ -102,21 +126,26 @@ const VoterPanel = () => {
             <CardDescription>Select a candidate to cast your vote</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {candidates.map((candidate, index) => (
                 <Card key={index} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
-                    <CardTitle>{candidate.name}</CardTitle>
+                    <CardTitle className="text-lg">{candidate.name}</CardTitle>
                     <CardDescription>{candidate.party}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <p className="text-sm text-muted-foreground">{candidate.tagline}</p>
-                    <Button 
-                      className="w-full"
-                      onClick={() => handleVote(candidate.id)}
-                    >
-                      Vote for {candidate.name}
-                    </Button>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">
+                        Votes: {Number(candidate.voteCount)}
+                      </span>
+                      <Button 
+                        onClick={() => handleVote(Number(candidate.id))}
+                        className="w-32"
+                      >
+                        Vote
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}

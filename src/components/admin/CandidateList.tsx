@@ -3,7 +3,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlus } from "lucide-react";
+import { UserPlus, Award } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { addCandidate } from '@/utils/contractWrite';
 
@@ -56,11 +56,14 @@ const CandidateList = ({ candidates }: CandidateListProps) => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Add New Candidate</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <UserPlus className="w-5 h-5" />
+            Add New Candidate
+          </CardTitle>
           <CardDescription>Enter the details of the new candidate</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-4">
+          <div className="grid gap-4">
             <div>
               <Label htmlFor="name">Candidate Name</Label>
               <Input
@@ -101,7 +104,6 @@ const CandidateList = ({ candidates }: CandidateListProps) => {
               onClick={handleAddCandidate}
               className="w-full"
             >
-              <UserPlus className="w-4 h-4 mr-2" />
               Add Candidate
             </Button>
           </div>
@@ -110,22 +112,35 @@ const CandidateList = ({ candidates }: CandidateListProps) => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Registered Candidates</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Award className="w-5 h-5" />
+            Registered Candidates ({candidates.length})
+          </CardTitle>
           <CardDescription>List of all registered candidates</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {candidates.map((candidate, index) => (
-              <Card key={index}>
+              <Card key={index} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
-                  <CardTitle>{candidate.name}</CardTitle>
+                  <CardTitle className="text-lg">{candidate.name}</CardTitle>
                   <CardDescription>{candidate.party}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">{candidate.tagline}</p>
+                  {candidate.voteCount && (
+                    <p className="mt-2 text-sm font-medium">
+                      Votes: {Number(candidate.voteCount)}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             ))}
+            {candidates.length === 0 && (
+              <div className="col-span-full text-center py-8 text-muted-foreground">
+                No candidates registered yet
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

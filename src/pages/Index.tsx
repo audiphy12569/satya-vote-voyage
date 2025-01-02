@@ -1,12 +1,21 @@
 import { useEffect, useState } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useDisconnect } from 'wagmi';
 import { Web3Button } from '@web3modal/react';
 import AdminPortal from '@/components/AdminPortal';
 import VoterPanel from '@/components/VoterPanel';
 import { getAdminAddress } from '@/utils/contractUtils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from '@/components/ui/button';
+import { LogOut } from 'lucide-react';
 
 const Index = () => {
   const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -49,7 +58,30 @@ const Index = () => {
     );
   }
 
-  return isAdmin ? <AdminPortal /> : <VoterPanel />;
+  const truncateAddress = (addr: string) => {
+    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+  };
+
+  return (
+    <div>
+      <div className="absolute top-4 right-4">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">
+              {address && truncateAddress(address)}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => disconnect()}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Disconnect
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      {isAdmin ? <AdminPortal /> : <VoterPanel />}
+    </div>
+  );
 };
 
 export default Index;

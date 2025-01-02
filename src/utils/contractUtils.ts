@@ -41,7 +41,7 @@ export const getVoters = async (): Promise<string[]> => {
     return data;
   } catch (error) {
     console.error('Error fetching voters:', error);
-    return [];
+    throw error;
   }
 };
 
@@ -92,7 +92,6 @@ export const getElectionStatus = async (): Promise<ElectionStatus> => {
       functionName: 'getElectionStatus'
     }) as ElectionStatusResponse;
     
-    console.log('Election status fetched:', status);
     return {
       isActive: status[0],
       startTime: status[1],
@@ -114,21 +113,46 @@ export const getElectionStatus = async (): Promise<ElectionStatus> => {
 export const approveVoter = async (voterAddress: string): Promise<void> => {
   try {
     console.log('Approving voter:', voterAddress);
+    
+    // Check if window.ethereum is available
+    if (!window.ethereum) {
+      throw new Error('No Ethereum provider found. Please install MetaMask or another wallet.');
+    }
+
+    // Create wallet client with better error handling
     const walletClient = createWalletClient({
       chain: sepolia,
       transport: custom(window.ethereum)
     });
     
-    const [address] = await walletClient.requestAddresses();
+    // Request accounts with error handling
+    const accounts = await window.ethereum.request({ 
+      method: 'eth_requestAccounts' 
+    }).catch((err: Error) => {
+      console.error('Error requesting accounts:', err);
+      throw new Error('Failed to connect to wallet. Please try again.');
+    });
+
+    if (!accounts || accounts.length === 0) {
+      throw new Error('No accounts found. Please ensure your wallet is connected.');
+    }
+
+    const [address] = accounts;
     
-    await walletClient.writeContract({
+    // Write to contract with error handling
+    const hash = await walletClient.writeContract({
       address: CONTRACT_ADDRESS as `0x${string}`,
       abi,
       functionName: 'approveVoter',
       args: [voterAddress as `0x${string}`]
+    }).catch((err: Error) => {
+      console.error('Error writing to contract:', err);
+      throw new Error('Failed to approve voter. Please check the address and try again.');
     });
+
+    console.log('Transaction hash:', hash);
   } catch (error) {
-    console.error('Error approving voter:', error);
+    console.error('Error in approveVoter:', error);
     throw error;
   }
 };
@@ -136,12 +160,22 @@ export const approveVoter = async (voterAddress: string): Promise<void> => {
 // Cast a vote
 export const castVote = async (candidateId: number): Promise<void> => {
   try {
+    if (!window.ethereum) {
+      throw new Error('No Ethereum provider found. Please install MetaMask or another wallet.');
+    }
+
     const walletClient = createWalletClient({
       chain: sepolia,
       transport: custom(window.ethereum)
     });
     
-    const [address] = await walletClient.requestAddresses();
+    const accounts = await window.ethereum.request({ 
+      method: 'eth_requestAccounts' 
+    });
+
+    if (!accounts || accounts.length === 0) {
+      throw new Error('No accounts found. Please ensure your wallet is connected.');
+    }
     
     await walletClient.writeContract({
       address: CONTRACT_ADDRESS as `0x${string}`,
@@ -158,12 +192,22 @@ export const castVote = async (candidateId: number): Promise<void> => {
 // Start election
 export const startElection = async (durationInMinutes: number): Promise<void> => {
   try {
+    if (!window.ethereum) {
+      throw new Error('No Ethereum provider found. Please install MetaMask or another wallet.');
+    }
+
     const walletClient = createWalletClient({
       chain: sepolia,
       transport: custom(window.ethereum)
     });
     
-    const [address] = await walletClient.requestAddresses();
+    const accounts = await window.ethereum.request({ 
+      method: 'eth_requestAccounts' 
+    });
+
+    if (!accounts || accounts.length === 0) {
+      throw new Error('No accounts found. Please ensure your wallet is connected.');
+    }
     
     await walletClient.writeContract({
       address: CONTRACT_ADDRESS as `0x${string}`,

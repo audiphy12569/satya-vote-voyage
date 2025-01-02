@@ -1,40 +1,7 @@
-import { createPublicClient, http, getContract, createWalletClient, custom } from 'viem';
-import { sepolia } from 'viem/chains';
+import { getContract } from 'viem';
+import { CONTRACT_ADDRESS, publicClient, walletClient } from './config';
 import { abi } from './contractAbi';
-
-// Define types for our contract responses
-interface ElectionStatus {
-  isActive: boolean;
-  startTime: bigint;
-  endTime: bigint;
-  totalVotes: bigint;
-}
-
-interface Candidate {
-  name: string;
-  party: string;
-  tagline: string;
-  logoIPFS: string;
-  voteCount: bigint;
-}
-
-// Fallback contract address for development
-const FALLBACK_CONTRACT_ADDRESS = "0x0000000000000000000000000000000000000000";
-
-// Get contract address from environment variable
-export const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || FALLBACK_CONTRACT_ADDRESS;
-
-// Create public client for read operations
-export const publicClient = createPublicClient({
-  chain: sepolia,
-  transport: http()
-});
-
-// Create wallet client for write operations
-export const walletClient = createWalletClient({
-  chain: sepolia,
-  transport: custom(window.ethereum!)
-});
+import type { ElectionStatus, Candidate } from './types';
 
 // Create contract instance
 export const getContractInstance = () => {
@@ -71,7 +38,7 @@ export const getVoters = async (): Promise<string[]> => {
   const contract = getContractInstance();
   try {
     console.log('Fetching approved voters from contract...');
-    const voters = await contract.read.getVoters();
+    const voters = await contract.read.getApprovedVoters();
     return voters as string[];
   } catch (error) {
     console.error('Error fetching voters:', error);
@@ -132,7 +99,6 @@ export const getElectionStatus = async (): Promise<ElectionStatus> => {
 
 // Approve voter function
 export const approveVoter = async (voterAddress: string): Promise<void> => {
-  const contract = getContractInstance();
   try {
     console.log('Approving voter:', voterAddress);
     const [account] = await walletClient.requestAddresses();
@@ -143,7 +109,7 @@ export const approveVoter = async (voterAddress: string): Promise<void> => {
       address: CONTRACT_ADDRESS as `0x${string}`,
       abi,
       functionName: 'approveVoter',
-      args: [voterAddress],
+      args: [voterAddress as `0x${string}`],
     });
     
     const hash = await walletClient.writeContract(request);

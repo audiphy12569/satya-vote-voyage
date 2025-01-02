@@ -54,6 +54,19 @@ export const abi = [
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "getApprovedVoters",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",

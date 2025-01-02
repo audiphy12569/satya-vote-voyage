@@ -2,7 +2,6 @@ import { publicClient } from './contractUtils';
 import { CONTRACT_ADDRESS } from '@/config/web3Config';
 import { abi } from './contractAbi';
 import type { ElectionStatus, Candidate, CandidateResponse, ElectionStatusResponse } from './types';
-import { sepolia } from 'viem/chains';
 import { getWalletClient } from './walletUtils';
 
 // Store the deployment block number to optimize log fetching
@@ -14,8 +13,7 @@ export const getAdminAddress = async (): Promise<string | undefined> => {
     const data = await publicClient.readContract({
       address: CONTRACT_ADDRESS as `0x${string}`,
       abi,
-      functionName: 'admin',
-      chain: sepolia
+      functionName: 'admin'
     }) as string;
     
     console.log('Admin address fetched:', data);
@@ -48,9 +46,9 @@ export const getVoters = async (): Promise<string[]> => {
       toBlock: latestBlock
     });
 
-    // Extract unique voter addresses from the events
+    // Extract unique voter addresses from the events and convert to lowercase
     const voters = [...new Set(logs.map(log => 
-      log.args.voter as string
+      (log.args.voter as string).toLowerCase()
     ))];
 
     console.log('Found voters from events:', voters);
@@ -63,8 +61,7 @@ export const getVoters = async (): Promise<string[]> => {
             address: CONTRACT_ADDRESS as `0x${string}`,
             abi,
             functionName: 'approvedVoters',
-            args: [voter],
-            chain: sepolia
+            args: [voter as `0x${string}`]
           }) as boolean;
           return isApproved ? voter : null;
         } catch (error) {
@@ -74,8 +71,8 @@ export const getVoters = async (): Promise<string[]> => {
       })
     );
 
-    // Filter out null values
-    const currentVoters = approvedVoters.filter((voter): voter is string => voter !== null);
+    // Filter out null values and ensure unique addresses
+    const currentVoters = [...new Set(approvedVoters.filter((voter): voter is string => voter !== null))];
     console.log('Currently approved voters:', currentVoters);
     return currentVoters;
   } catch (error) {
@@ -94,7 +91,6 @@ export const getCandidates = async (): Promise<Candidate[]> => {
       address: CONTRACT_ADDRESS as `0x${string}`,
       abi,
       functionName: 'getCandidateCount',
-      chain: sepolia,
       account: account[0]
     }) as bigint;
     
@@ -106,7 +102,6 @@ export const getCandidates = async (): Promise<Candidate[]> => {
         abi,
         functionName: 'getCandidate',
         args: [BigInt(i + 1)],
-        chain: sepolia,
         account: account[0]
       }) as CandidateResponse;
       
@@ -138,7 +133,6 @@ export const getElectionStatus = async (): Promise<ElectionStatus> => {
       address: CONTRACT_ADDRESS as `0x${string}`,
       abi,
       functionName: 'getElectionStatus',
-      chain: sepolia,
       account: account[0]
     }) as ElectionStatusResponse;
     

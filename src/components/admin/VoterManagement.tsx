@@ -15,6 +15,7 @@ interface VoterManagementProps {
 const VoterManagement = ({ voters, setVoters }: VoterManagementProps) => {
   const { toast } = useToast();
   const [newVoterAddress, setNewVoterAddress] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleAddVoter = async () => {
     if (!newVoterAddress) {
@@ -26,6 +27,27 @@ const VoterManagement = ({ voters, setVoters }: VoterManagementProps) => {
       return;
     }
 
+    // Check if address is valid Ethereum address
+    if (!/^0x[a-fA-F0-9]{40}$/.test(newVoterAddress)) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid Ethereum address",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Check if voter is already registered
+    if (voters.includes(newVoterAddress.toLowerCase())) {
+      toast({
+        title: "Error",
+        description: "This voter is already registered",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
       await approveVoter(newVoterAddress);
       toast({
@@ -33,8 +55,10 @@ const VoterManagement = ({ voters, setVoters }: VoterManagementProps) => {
         description: "Voter added successfully",
       });
       setNewVoterAddress('');
+      
       // Refresh the voters list
       const updatedVoters = await getVoters();
+      console.log('Updated voters list:', updatedVoters);
       setVoters(updatedVoters);
     } catch (error) {
       console.error('Error adding voter:', error);
@@ -43,6 +67,8 @@ const VoterManagement = ({ voters, setVoters }: VoterManagementProps) => {
         description: "Failed to add voter. Please check the address and try again.",
         variant: "destructive"
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -62,14 +88,16 @@ const VoterManagement = ({ voters, setVoters }: VoterManagementProps) => {
                 placeholder="0x..."
                 value={newVoterAddress}
                 onChange={(e) => setNewVoterAddress(e.target.value)}
+                disabled={isSubmitting}
               />
             </div>
             <Button 
               onClick={handleAddVoter}
               className="mt-8"
+              disabled={isSubmitting}
             >
               <UserPlus className="w-4 h-4 mr-2" />
-              Add Voter
+              {isSubmitting ? "Adding..." : "Add Voter"}
             </Button>
           </div>
         </CardContent>
@@ -77,17 +105,26 @@ const VoterManagement = ({ voters, setVoters }: VoterManagementProps) => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Registered Voters</CardTitle>
+          <CardTitle>Registered Voters ({voters.length})</CardTitle>
           <CardDescription>List of all registered voters</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {voters.map((voter, index) => (
-              <div key={index} className="p-4 bg-secondary rounded-lg flex items-center justify-between">
-                <span className="font-mono">{voter}</span>
-                <span className="text-sm text-muted-foreground">Registered</span>
+            {voters.length === 0 ? (
+              <div className="text-center py-4 text-muted-foreground">
+                No voters registered yet
               </div>
-            ))}
+            ) : (
+              voters.map((voter, index) => (
+                <div 
+                  key={voter} 
+                  className="p-4 bg-secondary rounded-lg flex items-center justify-between hover:bg-secondary/80 transition-colors"
+                >
+                  <span className="font-mono">{voter}</span>
+                  <span className="text-sm text-muted-foreground">Registered</span>
+                </div>
+              ))
+            )}
           </div>
         </CardContent>
       </Card>

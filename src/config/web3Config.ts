@@ -7,6 +7,9 @@ import { EthereumClient, w3mConnectors, w3mProvider } from '@web3modal/ethereum'
 // This will be replaced with your actual contract address after deployment
 export const CONTRACT_ADDRESS = '0x0000000000000000000000000000000000000000';
 
+// Replace this with your admin address
+export const ADMIN_ADDRESS = '0x0000000000000000000000000000000000000000';
+
 // Fallback API key for development
 const FALLBACK_ALCHEMY_KEY = "YOUR_FALLBACK_ALCHEMY_KEY";
 

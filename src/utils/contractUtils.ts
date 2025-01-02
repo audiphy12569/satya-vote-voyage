@@ -38,6 +38,20 @@ export const getAdminAddress = async () => {
   }
 };
 
+// Get all approved voters
+export const getVoters = async () => {
+  const contract = getContractInstance();
+  try {
+    console.log('Fetching approved voters from contract...');
+    // Since the contract doesn't have a direct method to get all voters,
+    // we'll need to implement this in a future contract upgrade
+    return [];
+  } catch (error) {
+    console.error('Error fetching voters:', error);
+    return [];
+  }
+};
+
 // Fetch all candidates
 export const getCandidates = async () => {
   const contract = getContractInstance();

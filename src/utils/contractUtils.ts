@@ -1,38 +1,30 @@
-import { getContract } from 'viem';
-import { CONTRACT_ADDRESS, publicClient, walletClient } from './config';
+import { createPublicClient, http, createWalletClient, custom } from 'viem';
+import { sepolia } from 'viem/chains';
 import { abi } from './contractAbi';
-import type { ElectionStatus, Candidate } from './types';
+import type { ElectionStatus, Candidate, CandidateResponse, ElectionStatusResponse } from './types';
 
-// Create contract instance
-export const getContractInstance = () => {
-  try {
-    console.log('Creating contract instance with address:', CONTRACT_ADDRESS);
-    return getContract({
-      address: CONTRACT_ADDRESS as `0x${string}`,
-      abi,
-      publicClient,
-      walletClient,
-    });
-  } catch (error) {
-    console.error('Error creating contract instance:', error);
-    throw error;
-  }
-};
+const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
 
-// Fetch admin address from contract
-export const getAdminAddress = async (): Promise<string | null> => {
+export const publicClient = createPublicClient({
+  chain: sepolia,
+  transport: http()
+});
+
+// Get admin address from contract
+export const getAdminAddress = async (): Promise<string | undefined> => {
   try {
     console.log('Fetching admin address from contract...');
     const data = await publicClient.readContract({
       address: CONTRACT_ADDRESS as `0x${string}`,
       abi,
-      functionName: 'admin',
-    });
+      functionName: 'admin'
+    }) as string;
+    
     console.log('Admin address fetched:', data);
-    return data as string;
+    return data;
   } catch (error) {
     console.error('Error fetching admin address:', error);
-    return null;
+    return undefined;
   }
 };
 
@@ -43,9 +35,10 @@ export const getVoters = async (): Promise<string[]> => {
     const data = await publicClient.readContract({
       address: CONTRACT_ADDRESS as `0x${string}`,
       abi,
-      functionName: 'getApprovedVoters',
-    });
-    return data as string[];
+      functionName: 'getApprovedVoters'
+    }) as string[];
+    
+    return data;
   } catch (error) {
     console.error('Error fetching voters:', error);
     return [];
@@ -59,8 +52,8 @@ export const getCandidates = async (): Promise<Candidate[]> => {
     const count = await publicClient.readContract({
       address: CONTRACT_ADDRESS as `0x${string}`,
       abi,
-      functionName: 'getCandidateCount',
-    });
+      functionName: 'getCandidateCount'
+    }) as bigint;
     
     const candidates: Candidate[] = [];
     
@@ -69,8 +62,8 @@ export const getCandidates = async (): Promise<Candidate[]> => {
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi,
         functionName: 'getCandidate',
-        args: [BigInt(i)],
-      }) as [string, string, string, string, bigint];
+        args: [BigInt(i)]
+      }) as CandidateResponse;
       
       candidates.push({
         name: candidate[0],
@@ -96,8 +89,8 @@ export const getElectionStatus = async (): Promise<ElectionStatus> => {
     const status = await publicClient.readContract({
       address: CONTRACT_ADDRESS as `0x${string}`,
       abi,
-      functionName: 'getElectionStatus',
-    }) as [boolean, bigint, bigint, bigint];
+      functionName: 'getElectionStatus'
+    }) as ElectionStatusResponse;
     
     console.log('Election status fetched:', status);
     return {
@@ -117,69 +110,67 @@ export const getElectionStatus = async (): Promise<ElectionStatus> => {
   }
 };
 
-// Approve voter function
+// Approve a voter
 export const approveVoter = async (voterAddress: string): Promise<void> => {
   try {
     console.log('Approving voter:', voterAddress);
-    const [account] = await walletClient.requestAddresses();
-    console.log('Using account:', account);
+    const walletClient = createWalletClient({
+      chain: sepolia,
+      transport: custom(window.ethereum)
+    });
     
-    const { request } = await publicClient.simulateContract({
-      account,
+    const [address] = await walletClient.requestAddresses();
+    
+    await walletClient.writeContract({
       address: CONTRACT_ADDRESS as `0x${string}`,
       abi,
       functionName: 'approveVoter',
-      args: [voterAddress as `0x${string}`],
+      args: [voterAddress as `0x${string}`]
     });
-    
-    const hash = await walletClient.writeContract(request);
-    console.log('Voter approved successfully, transaction hash:', hash);
   } catch (error) {
     console.error('Error approving voter:', error);
     throw error;
   }
 };
 
-// Cast vote function
+// Cast a vote
 export const castVote = async (candidateId: number): Promise<void> => {
   try {
-    console.log('Casting vote for candidate:', candidateId);
-    const [account] = await walletClient.requestAddresses();
-    console.log('Using account:', account);
+    const walletClient = createWalletClient({
+      chain: sepolia,
+      transport: custom(window.ethereum)
+    });
     
-    const { request } = await publicClient.simulateContract({
-      account,
+    const [address] = await walletClient.requestAddresses();
+    
+    await walletClient.writeContract({
       address: CONTRACT_ADDRESS as `0x${string}`,
       abi,
       functionName: 'vote',
-      args: [BigInt(candidateId)],
+      args: [BigInt(candidateId)]
     });
-    
-    const hash = await walletClient.writeContract(request);
-    console.log('Vote cast successfully, transaction hash:', hash);
   } catch (error) {
     console.error('Error casting vote:', error);
     throw error;
   }
 };
 
-// Start election function
+// Start election
 export const startElection = async (durationInMinutes: number): Promise<void> => {
   try {
-    console.log('Starting election with duration:', durationInMinutes);
-    const [account] = await walletClient.requestAddresses();
-    console.log('Using account:', account);
+    const walletClient = createWalletClient({
+      chain: sepolia,
+      transport: custom(window.ethereum)
+    });
     
-    const { request } = await publicClient.simulateContract({
-      account,
+    const [address] = await walletClient.requestAddresses();
+    
+    await walletClient.writeContract({
       address: CONTRACT_ADDRESS as `0x${string}`,
       abi,
       functionName: 'startElection',
-      args: [BigInt(durationInMinutes)],
+      args: [BigInt(durationInMinutes)]
     });
-    
-    const hash = await walletClient.writeContract(request);
-    console.log('Election started successfully, transaction hash:', hash);
   } catch (error) {
     console.error('Error starting election:', error);
     throw error;

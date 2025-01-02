@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, UserPlus, Award, Calendar } from "lucide-react";
-import { getVoters, getCandidates, getElectionStatus } from '@/utils/contractUtils';
+import { getVoters, getCandidates, getElectionStatus, approveVoter } from '@/utils/contractUtils';
 
 const AdminPortal = () => {
   const { toast } = useToast();
@@ -28,7 +28,7 @@ const AdminPortal = () => {
         ]);
         setVoters(votersList);
         setCandidates(candidatesList);
-        setElectionActive(status);
+        setElectionActive(status.isActive);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -55,16 +55,20 @@ const AdminPortal = () => {
     }
 
     try {
-      // Add contract interaction here
+      await approveVoter(newVoterAddress);
       toast({
         title: "Success",
         description: "Voter added successfully",
       });
       setNewVoterAddress('');
+      // Refresh the voters list
+      const updatedVoters = await getVoters();
+      setVoters(updatedVoters);
     } catch (error) {
+      console.error('Error adding voter:', error);
       toast({
         title: "Error",
-        description: "Failed to add voter",
+        description: "Failed to add voter. Please check the address and try again.",
         variant: "destructive"
       });
     }

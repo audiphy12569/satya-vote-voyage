@@ -119,16 +119,16 @@ export const getElectionStatus = async (): Promise<ElectionStatus> => {
   }
 };
 
-// Add voter function
-export const addVoter = async (voterAddress: string): Promise<unknown> => {
+// Approve voter function (renamed from addVoter to match contract)
+export const approveVoter = async (voterAddress: string): Promise<unknown> => {
   const contract = getContractInstance();
   try {
-    console.log('Adding voter:', voterAddress);
+    console.log('Approving voter:', voterAddress);
     const tx = await contract.write.approveVoter([voterAddress]);
-    console.log('Voter added successfully:', tx);
+    console.log('Voter approved successfully:', tx);
     return tx;
   } catch (error) {
-    console.error('Error adding voter:', error);
+    console.error('Error approving voter:', error);
     throw error;
   }
 };

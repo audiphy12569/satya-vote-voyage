@@ -2,13 +2,14 @@ import { configureChains, createConfig } from 'wagmi';
 import { sepolia } from 'wagmi/chains';
 import { alchemyProvider } from 'wagmi/providers/alchemy';
 import { publicProvider } from 'wagmi/providers/public';
-import { getDefaultWallets } from '@web3modal/ethereum';
+import { EthereumClient, w3mConnectors, w3mProvider } from '@web3modal/ethereum';
+import { Web3Modal } from '@web3modal/react';
 
 // This will be replaced with your actual contract address after deployment
 export const CONTRACT_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 // Configure chains & providers
-const { chains, publicClient } = configureChains(
+const { chains, publicClient, webSocketPublicClient } = configureChains(
   [sepolia],
   [
     alchemyProvider({ apiKey: process.env.ALCHEMY_API_KEY || '' }),
@@ -16,18 +17,15 @@ const { chains, publicClient } = configureChains(
   ]
 );
 
-// Configure wallet connection
-const { projectId } = getDefaultWallets({
-  appName: 'Satya Vote',
-  projectId: process.env.WALLET_CONNECT_PROJECT_ID || '',
-  chains,
-});
-
 // Create wagmi config
-export const wagmiConfig = createConfig({
+export const config = createConfig({
   autoConnect: true,
+  connectors: w3mConnectors({ 
+    projectId: process.env.WALLET_CONNECT_PROJECT_ID || '', 
+    chains 
+  }),
   publicClient,
-  projectId,
+  webSocketPublicClient,
 });
 
-export const ethereumChains = chains;
+export const ethereumClient = new EthereumClient(config, chains);

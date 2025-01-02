@@ -1,4 +1,4 @@
-import { createPublicClient, http, getContract } from 'viem';
+import { createPublicClient, http, getContract, createWalletClient, custom } from 'viem';
 import { sepolia } from 'viem/chains';
 import { abi } from './contractAbi';
 
@@ -30,6 +30,12 @@ export const publicClient = createPublicClient({
   transport: http()
 });
 
+// Create wallet client for write operations
+export const walletClient = createWalletClient({
+  chain: sepolia,
+  transport: custom(window.ethereum)
+});
+
 // Create contract instance
 export const getContractInstance = () => {
   console.log('Creating contract instance with address:', CONTRACT_ADDRESS);
@@ -37,6 +43,7 @@ export const getContractInstance = () => {
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi,
     publicClient,
+    walletClient,
   });
 };
 
@@ -59,9 +66,8 @@ export const getVoters = async (): Promise<string[]> => {
   const contract = getContractInstance();
   try {
     console.log('Fetching approved voters from contract...');
-    // Since the contract doesn't have a direct method to get all voters,
-    // we'll need to implement this in a future contract upgrade
-    return [];
+    const voters = await contract.read.getVoters();
+    return voters as string[];
   } catch (error) {
     console.error('Error fetching voters:', error);
     return [];
@@ -119,14 +125,16 @@ export const getElectionStatus = async (): Promise<ElectionStatus> => {
   }
 };
 
-// Approve voter function (renamed from addVoter to match contract)
-export const approveVoter = async (voterAddress: string): Promise<unknown> => {
+// Approve voter function
+export const approveVoter = async (voterAddress: string): Promise<void> => {
   const contract = getContractInstance();
   try {
     console.log('Approving voter:', voterAddress);
-    const tx = await contract.write.approveVoter([voterAddress]);
-    console.log('Voter approved successfully:', tx);
-    return tx;
+    const [account] = await walletClient.requestAddresses();
+    const hash = await contract.write.approveVoter([voterAddress], {
+      account,
+    });
+    console.log('Voter approved successfully, transaction hash:', hash);
   } catch (error) {
     console.error('Error approving voter:', error);
     throw error;
@@ -134,13 +142,15 @@ export const approveVoter = async (voterAddress: string): Promise<unknown> => {
 };
 
 // Cast vote function
-export const castVote = async (candidateId: number): Promise<unknown> => {
+export const castVote = async (candidateId: number): Promise<void> => {
   const contract = getContractInstance();
   try {
     console.log('Casting vote for candidate:', candidateId);
-    const tx = await contract.write.vote([BigInt(candidateId)]);
-    console.log('Vote cast successfully:', tx);
-    return tx;
+    const [account] = await walletClient.requestAddresses();
+    const hash = await contract.write.vote([BigInt(candidateId)], {
+      account,
+    });
+    console.log('Vote cast successfully, transaction hash:', hash);
   } catch (error) {
     console.error('Error casting vote:', error);
     throw error;
@@ -148,13 +158,15 @@ export const castVote = async (candidateId: number): Promise<unknown> => {
 };
 
 // Start election function
-export const startElection = async (durationInMinutes: number): Promise<unknown> => {
+export const startElection = async (durationInMinutes: number): Promise<void> => {
   const contract = getContractInstance();
   try {
     console.log('Starting election with duration:', durationInMinutes);
-    const tx = await contract.write.startElection([BigInt(durationInMinutes)]);
-    console.log('Election started successfully:', tx);
-    return tx;
+    const [account] = await walletClient.requestAddresses();
+    const hash = await contract.write.startElection([BigInt(durationInMinutes)], {
+      account,
+    });
+    console.log('Election started successfully, transaction hash:', hash);
   } catch (error) {
     console.error('Error starting election:', error);
     throw error;

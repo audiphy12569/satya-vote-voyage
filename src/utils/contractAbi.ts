@@ -37,6 +37,13 @@ const candidateFunctions = [
     "type": "function"
   },
   {
+    "inputs": [{ "internalType": "uint256", "name": "_id", "type": "uint256" }],
+    "name": "removeCandidate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "getCandidateCount",
     "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],

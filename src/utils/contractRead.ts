@@ -45,7 +45,8 @@ export const getCandidates = async (): Promise<Candidate[]> => {
     const count = await publicClient.readContract({
       address: CONTRACT_ADDRESS as `0x${string}`,
       abi,
-      functionName: 'getCandidateCount'
+      functionName: 'getCandidateCount',
+      chain: sepolia
     }) as bigint;
     
     const candidates: Candidate[] = [];
@@ -55,7 +56,8 @@ export const getCandidates = async (): Promise<Candidate[]> => {
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi,
         functionName: 'getCandidate',
-        args: [BigInt(i)]
+        args: [BigInt(i)],
+        chain: sepolia
       }) as CandidateResponse;
       
       candidates.push({
@@ -81,7 +83,8 @@ export const getElectionStatus = async (): Promise<ElectionStatus> => {
     const status = await publicClient.readContract({
       address: CONTRACT_ADDRESS as `0x${string}`,
       abi,
-      functionName: 'getElectionStatus'
+      functionName: 'getElectionStatus',
+      chain: sepolia
     }) as ElectionStatusResponse;
     
     return {

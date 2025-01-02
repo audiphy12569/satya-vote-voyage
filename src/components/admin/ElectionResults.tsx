@@ -22,11 +22,20 @@ const ElectionResults = ({ candidates, totalVotes }: ElectionResultsProps) => {
     return (Number(votes) / Number(totalVotes) * 100).toFixed(1);
   };
 
-  const getRankIcon = (index: number) => {
+  // Check if there's a tie for first place
+  const hasWinner = sortedCandidates.length > 0 && 
+    sortedCandidates[0].voteCount > BigInt(0) &&
+    (sortedCandidates.length === 1 || sortedCandidates[0].voteCount > sortedCandidates[1].voteCount);
+
+  const isTie = sortedCandidates.length > 1 && 
+    sortedCandidates[0].voteCount === sortedCandidates[1].voteCount;
+
+  const getRankIcon = (index: number, voteCount: bigint) => {
+    if (voteCount === BigInt(0)) return null;
     switch(index) {
-      case 0: return <Trophy className="w-5 h-5 text-yellow-500" />;
-      case 1: return <Medal className="w-5 h-5 text-gray-400" />;
-      case 2: return <Award className="w-5 h-5 text-amber-600" />;
+      case 0: return hasWinner ? <Trophy className="w-5 h-5 text-yellow-500" /> : null;
+      case 1: return !isTie ? <Medal className="w-5 h-5 text-gray-400" /> : null;
+      case 2: return !isTie ? <Award className="w-5 h-5 text-amber-600" /> : null;
       default: return null;
     }
   };
@@ -39,14 +48,24 @@ const ElectionResults = ({ candidates, totalVotes }: ElectionResultsProps) => {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
+          {totalVotes === BigInt(0) ? (
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <p className="text-center text-muted-foreground">No votes were cast in this election</p>
+            </div>
+          ) : isTie ? (
+            <div className="p-4 bg-yellow-50 rounded-lg mb-4">
+              <p className="text-center font-medium">Election resulted in a tie!</p>
+            </div>
+          ) : null}
+          
           {sortedCandidates.map((candidate, index) => (
             <div 
               key={candidate.name} 
-              className={`p-4 rounded-lg ${index === 0 ? 'bg-yellow-50' : 'bg-gray-50'}`}
+              className={`p-4 rounded-lg ${hasWinner && index === 0 ? 'bg-yellow-50' : 'bg-gray-50'}`}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  {getRankIcon(index)}
+                  {getRankIcon(index, candidate.voteCount)}
                   <div>
                     <p className="font-medium">{candidate.name}</p>
                     <p className="text-sm text-muted-foreground">{candidate.party}</p>

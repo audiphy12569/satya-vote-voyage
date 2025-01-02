@@ -19,6 +19,7 @@ const ElectionControl = ({ electionActive, candidateCount = 0 }: ElectionControl
   const [endTime, setEndTime] = useState<bigint>(BigInt(0));
   const [totalVotes, setTotalVotes] = useState<bigint>(BigInt(0));
   const [candidates, setCandidates] = useState<any[]>([]);
+  const [showDurationInput, setShowDurationInput] = useState(false);
 
   useEffect(() => {
     const checkElectionStatus = async () => {
@@ -72,6 +73,7 @@ const ElectionControl = ({ electionActive, candidateCount = 0 }: ElectionControl
       });
       setHasEnded(false);
       setCandidates([]);
+      setShowDurationInput(false);
     } catch (error) {
       console.error('Error starting election:', error);
       toast({
@@ -118,7 +120,15 @@ const ElectionControl = ({ electionActive, candidateCount = 0 }: ElectionControl
                   )}
                 </p>
               </div>
-              {!electionActive && !hasEnded && (
+              {!electionActive && !hasEnded && !showDurationInput && (
+                <Button
+                  onClick={() => setShowDurationInput(true)}
+                  disabled={candidateCount < 2}
+                >
+                  Start New Election
+                </Button>
+              )}
+              {showDurationInput && (
                 <div className="flex items-center gap-4">
                   <div className="w-32">
                     <Label htmlFor="duration">Duration (minutes)</Label>
@@ -131,13 +141,20 @@ const ElectionControl = ({ electionActive, candidateCount = 0 }: ElectionControl
                       placeholder="60"
                     />
                   </div>
-                  <Button
-                    onClick={handleStartElection}
-                    disabled={candidateCount < 2}
-                    className="mt-6"
-                  >
-                    Start Election
-                  </Button>
+                  <div className="flex gap-2 mt-6">
+                    <Button
+                      onClick={handleStartElection}
+                      disabled={candidateCount < 2}
+                    >
+                      Confirm Start
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowDurationInput(false)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
                 </div>
               )}
               {electionActive && !hasEnded && (
@@ -153,9 +170,9 @@ const ElectionControl = ({ electionActive, candidateCount = 0 }: ElectionControl
                   End Election
                 </Button>
               )}
-              {hasEnded && (
+              {hasEnded && !showDurationInput && (
                 <Button
-                  onClick={handleStartElection}
+                  onClick={() => setShowDurationInput(true)}
                   disabled={candidateCount < 2}
                 >
                   Start New Election

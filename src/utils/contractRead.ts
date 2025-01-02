@@ -3,6 +3,7 @@ import { CONTRACT_ADDRESS } from '@/config/web3Config';
 import { abi } from './contractAbi';
 import type { ElectionStatus, Candidate, CandidateResponse, ElectionStatusResponse } from './types';
 import { sepolia } from 'viem/chains';
+import { getWalletClient } from './walletUtils';
 
 export const getAdminAddress = async (): Promise<string | undefined> => {
   try {
@@ -25,19 +26,21 @@ export const getAdminAddress = async (): Promise<string | undefined> => {
 export const getVoters = async (): Promise<string[]> => {
   try {
     console.log('Fetching approved voters from contract...');
+    const walletClient = await getWalletClient();
+    const account = await walletClient.getAddresses();
+    
     const data = await publicClient.readContract({
       address: CONTRACT_ADDRESS as `0x${string}`,
       abi,
       functionName: 'getApprovedVoters',
       chain: sepolia,
-      account: publicClient.account
+      account: account[0]
     }) as string[];
     
     console.log('Voters fetched successfully:', data);
     return data || [];
   } catch (error) {
     console.error('Error fetching voters:', error);
-    // Return empty array instead of throwing to handle the error gracefully
     return [];
   }
 };
@@ -45,12 +48,15 @@ export const getVoters = async (): Promise<string[]> => {
 export const getCandidates = async (): Promise<Candidate[]> => {
   try {
     console.log('Fetching candidates from contract...');
+    const walletClient = await getWalletClient();
+    const account = await walletClient.getAddresses();
+    
     const count = await publicClient.readContract({
       address: CONTRACT_ADDRESS as `0x${string}`,
       abi,
       functionName: 'getCandidateCount',
       chain: sepolia,
-      account: publicClient.account
+      account: account[0]
     }) as bigint;
     
     const candidates: Candidate[] = [];
@@ -62,7 +68,7 @@ export const getCandidates = async (): Promise<Candidate[]> => {
         functionName: 'getCandidate',
         args: [BigInt(i)],
         chain: sepolia,
-        account: publicClient.account
+        account: account[0]
       }) as CandidateResponse;
       
       candidates.push({
@@ -85,12 +91,15 @@ export const getCandidates = async (): Promise<Candidate[]> => {
 export const getElectionStatus = async (): Promise<ElectionStatus> => {
   try {
     console.log('Fetching election status from contract...');
+    const walletClient = await getWalletClient();
+    const account = await walletClient.getAddresses();
+    
     const status = await publicClient.readContract({
       address: CONTRACT_ADDRESS as `0x${string}`,
       abi,
       functionName: 'getElectionStatus',
       chain: sepolia,
-      account: publicClient.account
+      account: account[0]
     }) as ElectionStatusResponse;
     
     return {
